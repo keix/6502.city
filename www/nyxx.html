@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>6502.city - Emulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>Nyxx</h1>
+    <div class="emulator">
+        <p>This is Nyxx, a 6502 CPU emulator written in Zig and compiled to WebAssembly. It targets the Ricoh 2A03 CPU used in the NES, running entirely in the JavaScript runtime on your browser.</p>
+        <canvas id="canvas" width="512" height="480"></canvas>
+        <p>This project is created by <a href="https://keix.github.io/">@Kei Sawamura</a> with Vim on GNU/Linux.</p>
+        <a href="https://github.com/keix/nyxx" target="_blank"><span class="blinker">▶</span> View Source Code on GitHub</a>
+    </div>
+
+    <script>
+
+        let ROMFILE = 'roms/nestest.nes'; // Default ROM file
+        let wasm = null;
+        let canvas = null;
+        let ctx = null;
+        let running = false;
+
+        async function init() {
+            try {
+                const response = await fetch('./nyxx.wasm');
+                const wasmBuffer = await response.arrayBuffer();
+                
+
+                const wasmModule = await WebAssembly.instantiate(wasmBuffer, {
+                    env: {
+                        notifyFrameReadyImpl: () => {}
+                    }
+                });
+                
+                wasm = wasmModule.instance.exports;
+                canvas = document.getElementById('canvas');
+                ctx = canvas.getContext('2d');
+
+                const functions = Object.keys(wasm).filter(k => typeof wasm[k] === 'function');
+                
+                return true;
+            } catch (error) {
+                console.error('Error:', error);
+                return false;
+            }
+        }
+
+        async function loadRom() {
+            try {
+                // Load test ROM
+                const response = await fetch(ROMFILE);
+                const romBuffer = await response.arrayBuffer();
+                const romData = new Uint8Array(romBuffer);
+                
+                // Allocate buffer in WASM
+                const bufferPtr = wasm.init(romData.length);
+                if (!bufferPtr) {
+                    throw new Error('Failed to allocate ROM buffer');
+                }
+                
+                // Copy ROM to WASM memory
+                const wasmMemory = new Uint8Array(wasm.memory.buffer, bufferPtr, romData.length);
+                wasmMemory.set(romData);
+                    
+            } catch (error) {
+                console.error('ROM Error:', error);
+            }
+        }
+
+        function startEmulation() {
+            try {
+                const success = wasm.start();
+                if (!success) {
+                    throw new Error('Failed to start emulator');
+                }
+                
+                running = true;
+                gameLoop();
+                
+            } catch (error) {
+                console.error('Start Error:', error);
+            }
+        }
+
+        function pauseEmulation() {
+            running = false;
+        }
+
+        function gameLoop() {
+            if (!running) return;
+            
+            try {
+                wasm.step();
+                renderFrame();
+                requestAnimationFrame(gameLoop);
+            } catch (error) {
+                running = false;
+                console.error('Runtime Error:', error);
+            }
+        }
+
+        function renderFrame() {
+            const framePtr = wasm.getFrameBufferPtr();
+            const width = wasm.getFrameWidth();
+            const height = wasm.getFrameHeight();
+            
+            const frameBuffer = new Uint32Array(wasm.memory.buffer, framePtr, width * height);
+            const imageData = ctx.createImageData(width, height);
+            
+            for (let i = 0; i < frameBuffer.length; i++) {
+                const pixel = frameBuffer[i];
+                const dataIndex = i * 4;
+                
+                imageData.data[dataIndex] = (pixel >> 16) & 0xFF;     // R
+                imageData.data[dataIndex + 1] = (pixel >> 8) & 0xFF;  // G
+                imageData.data[dataIndex + 2] = pixel & 0xFF;         // B
+                imageData.data[dataIndex + 3] = 255;                  // A
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(canvas, 0, 0, width, height, 0, 0, 512, 480);
+        }
+
+        // Keyboard input
+        const keyMap = {
+            'KeyZ': { controller: 0, button: 0 },
+            'KeyX': { controller: 0, button: 1 },
+            'Space': { controller: 0, button: 2 },
+            'Enter': { controller: 0, button: 3 },
+            'ArrowUp': { controller: 0, button: 4 },
+            'ArrowDown': { controller: 0, button: 5 },
+            'ArrowLeft': { controller: 0, button: 6 },
+            'ArrowRight': { controller: 0, button: 7 }
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (!running || !wasm) return;
+            const mapping = keyMap[e.code];
+            if (mapping) {
+                wasm.setButtonState(mapping.controller, mapping.button, true);
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (!running || !wasm) return;
+            const mapping = keyMap[e.code];
+            if (mapping) {
+                wasm.setButtonState(mapping.controller, mapping.button, false);
+                e.preventDefault();
+            }
+        });
+
+        (async () => {
+            const initialized = await init();
+            if (initialized) {
+                await loadRom();
+                startEmulation();
+            }
+        })();
+    </script>
+</body>
+</html>
+

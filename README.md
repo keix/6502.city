@@ -1,25 +1,45 @@
-# 6502.city
-A 6502 emulator compiled from Zig to WebAssembly. ROMs are constructed manually from 6502 mnemonics without an assembler. The system is deployed with CDK, served over the web. proving you don't need an assembler to dream in opcodes.
+# 6502.city — Nyxx feat. JavaScript
+
+**6502.city** where Read-Only becomes Reply-On. It is a WebGL frontend for [Nyxx](https://github.com/keix/nyxx).
 
 ## What is 6502.city?
+6502.city dynamically constructs **virtual ROM** images from runtime data. Unlike traditional systems that load a fixed ROM, here the ROM itself is built in-browser — byte by byte — based on API responses or scripted logic.
 
-**6502.city** is a full-featured 6502 CPU emulator, compiled to WebAssembly and embedded in a minimal web frontend.
+This ROM is then **injected into Nyxx’s virtual memory map** and executed as if it had always existed.
 
-It runs directly in your browser, with no plugins, no downloads, and no nonsense.  
-This project is designed for speed, simplicity, and style — built from scratch in Zig.
+No assembler.  
+No illusion.  
+Just memory, redefined.
 
-We believe that:
-- Code should be explicit.
-- Emulators should be fast.
-- Retro computing deserves a modern platform.
+## Key Features
 
+- **Dynamic ROM synthesis** in JavaScript
+- **Memory-mapped ROM emulation** via Nyxx (WASM)
+- **WebGL frontend** for native-feeling, pixel-perfect rendering
+- Runs entirely in your browser — no installs, no plugins
 
-## Why?
-We love the 6502. We grew up with it.  
-This is a tribute — a handcrafted virtual city where the 8-bit heart never stops ticking.
+## Architecture
+- Nyxx exposes a **virtual ROM area** (e.g. `$8000–$FFFF`)
+- JavaScript constructs or modifies the ROM contents dynamically
+- Serialized API responses or hand-written opcodes are placed directly into the ROM region
+- Nyxx runs the updated ROM, unaware it was just written
 
-The goal is to make the 6502 live forever — in your browser,, across the network.
+This allows:
+- Real-time, programmable ROM content
+- Reactive systems (e.g. AI-assisted dialogue, branching logic)
+- Full 8-bit compatibility — no spec violations, no magic
+
+## Dreams, in Opcodes
+6502.city is a tribute to cartridges that were never released. The 8-bit AI cartridge I dreamed of as a child was never built. The 2A03 was discontinued, and that dream faded — but not forever.  
+
+Today, I deployed what never shipped.
+
+## Deployment
+
+Deployed using AWS CDK. Static frontend, dynamic ROMs, zero backend compute.
 
 ## Live Demo
 
-Coming soon: [https://6502.city](https://6502.city)  
+Coming soon: [https://6502.city](https://6502.city)
+
+> **You don’t need an assembler to dream in opcodes.**
