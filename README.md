@@ -3,9 +3,9 @@
 **6502.city** where Read-Only becomes Reply-On. It is a WebGL frontend for [Nyxx](https://github.com/keix/nyxx).
 
 ## What is 6502.city?
-6502.city dynamically constructs **virtual ROM** images from runtime data. Unlike traditional systems that load a fixed ROM, here the ROM itself is built in-browser — byte by byte — based on API responses or scripted logic.
+This project showcases a minimal WebAssembly runtime for 6502 programs, powered by a Zig-written emulator and a WebGL renderer.
 
-This ROM is then **injected into Nyxx’s virtual memory map** and executed as if it had always existed.
+At present, the ROM is precompiled from a static Zig array — no assembler is used. The instruction sequence is directly serialized into a binary blob during the Zig build and mapped into Nyxx’s virtual memory space ($8000–$FFFF).
 
 No assembler.  
 No illusion.  
@@ -20,23 +20,7 @@ Just memory, redefined.
 
 ## Architecture
 - Nyxx exposes a **virtual ROM area** (e.g. `$8000–$FFFF`)
-- JavaScript constructs or modifies the ROM contents dynamically
 - Serialized API responses or hand-written opcodes are placed directly into the ROM region
-- Nyxx runs the updated ROM, unaware it was just written
-
-This allows:
-- Real-time, programmable ROM content
-- Reactive systems (e.g. AI-assisted dialogue, branching logic)
-- Full 8-bit compatibility — no spec violations, no magic
-
-## Dreams, in Opcodes
-6502.city is a tribute to cartridges that were never released. The 8-bit AI cartridge I dreamed of as a child was never built. The 2A03 was discontinued, and that dream faded — but not forever.  
-
-Today, I deployed what never shipped.
-
-## Deployment
-
-Deployed using AWS CDK. Static frontend, dynamic ROMs, zero backend compute.
 
 ## Live Demo
 
