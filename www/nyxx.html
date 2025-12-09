@@ -18,7 +18,7 @@
 
     <script>
 
-        let ROMFILE = 'roms/nestest.nes'; // Default ROM file
+        let ROMFILE = 'roms/6502.city.nes'; // Default ROM file
         let wasm = null;
         let canvas = null;
         let ctx = null;
@@ -28,7 +28,6 @@
             try {
                 const response = await fetch('./nyxx.wasm');
                 const wasmBuffer = await response.arrayBuffer();
-                
 
                 const wasmModule = await WebAssembly.instantiate(wasmBuffer, {
                     env: {
@@ -166,4 +165,3 @@
     </script>
 </body>
 </html>
-
